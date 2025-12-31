@@ -1,61 +1,118 @@
 # 图书管理系统
 
-基于 Flask 的图书管理系统，实现图书的增删改查、借阅管理等核心功能。
+基于 Flask + Next.js 的全栈图书管理系统，实现图书的增删改查、借阅管理等核心功能。
 
-## 一、系统概述
+## 项目概述
 
-### 1.1 核心角色（极简版仅需2类）
+本项目采用前后端分离架构：
+- **后端**：Flask RESTful API 服务
+- **前端**：Next.js 16 现代化 Web 应用
 
-1. **管理员**：负责图书和借阅记录的管理
-2. **普通用户/借阅人**：仅能查询图书、借阅/归还图书
+### 核心角色
 
-### 1.2 技术栈
+1. **管理员**：负责图书和借阅记录的管理、用户管理
+2. **普通用户**：查询图书、借阅/归还图书、查看个人借阅记录
 
-- **后端框架**：Flask (Python)
-- **数据库**：SQLite（开发环境）/ MySQL（生产环境）
-- **ORM**：SQLAlchemy
-- **前端**：HTML + CSS + JavaScript（Bootstrap）
-- **用户认证**：Flask-Login
+## 技术栈
 
-## 二、功能模块设计
+### 后端技术栈
 
-### 2.1 管理员核心功能（系统核心）
+| 技术 | 版本 | 说明 |
+|-----|------|------|
+| Python | 3.8+ | 编程语言 |
+| Flask | 3.0.0 | Web 框架 |
+| SQLAlchemy | 3.1.1 | ORM 框架 |
+| Flask-Login | 0.6.3 | 用户认证 |
+| Flask-Migrate | 4.0.5 | 数据库迁移 |
+| SQLite/MySQL | - | 数据库 |
+| Swagger UI | 4.11.1 | API 文档 |
 
-#### 2.1.1 图书管理
+### 前端技术栈
 
-| 具体子功能 | 作用说明 |
-|-----------|---------|
-| 新增图书 | 录入图书基础信息（书名、作者、ISBN、数量），是系统的基础数据来源 |
-| 删除/修改图书 | 修正错误信息（如ISBN输错）、移除下架图书 |
-| 查询图书 | 按书名/作者/ISBN快速查找图书，确认库存 |
+| 技术 | 版本 | 说明 |
+|-----|------|------|
+| Next.js | 16.1.1 | React 框架 (App Router) |
+| React | 19.2.3 | UI 库 |
+| TypeScript | 5.x | 类型安全 |
+| Tailwind CSS | 4.x | 样式框架 |
+| shadcn/ui | - | UI 组件库 |
+| Lucide React | 0.562.0 | 图标库 |
+| React Hook Form | 7.69.0 | 表单处理 |
+| Zod | 4.2.1 | 数据验证 |
 
-#### 2.1.2 借阅管理
+## 功能模块
 
-| 具体子功能 | 作用说明 |
-|-----------|---------|
-| 办理借阅 | 记录"用户+图书+借阅时间+应还时间"，扣减图书库存 |
-| 办理归还 | 记录归还时间，恢复图书库存；（极简版可暂不做逾期提醒） |
-| 查看借阅记录 | 按用户/图书查询借阅情况，确认未还图书 |
+### 用户认证
+- 用户登录/注册/登出
+- 基于 Session 的身份验证
+- 角色权限控制（管理员/普通用户）
 
-#### 2.1.3 用户管理（可选极简版）
+### 图书管理
+- 图书列表展示（分页、搜索）
+- 图书 CRUD 操作（管理员）
+- 按书名/作者/ISBN 搜索
+- 库存管理
 
-| 具体子功能 | 作用说明 |
-|-----------|---------|
-| 新增用户 | 录入借阅人基础信息（姓名、手机号/学号，唯一标识） |
-| 查询用户 | 快速找到借阅人，核对身份 |
+### 借阅管理
+- 借阅记录列表（分页、筛选）
+- 办理借阅/归还（管理员）
+- 借阅状态跟踪
+- 逾期记录管理
 
-### 2.2 普通用户核心功能（仅查询+基础操作）
+### 用户管理（管理员）
+- 用户列表展示
+- 用户 CRUD 操作
+- 用户角色管理
 
-| 功能模块 | 具体子功能 | 作用说明 |
-|---------|-----------|---------|
-| 图书查询 | 按条件查图书 | 仅能看"书名、作者、是否可借"，无法修改数据 |
-| 借阅记录查询 | 查自己的借阅/未还图书 | 确认自己的借阅情况，避免逾期 |
+### 个人中心
+- 个人信息查看/修改
+- 密码修改
+- 我的借阅记录
 
-## 三、数据库设计
+## 项目结构
 
-### 3.1 数据表结构
+```
+图书管理系统/
+├── README.md                 # 项目说明文档
+├── requirements.txt          # Python 依赖
+├── config.py                 # 后端配置文件
+├── run.py                    # 后端启动文件
+├── openapi.yaml              # OpenAPI 文档 (YAML)
+├── openapi.json              # OpenAPI 文档 (JSON)
+├── app/                      # Flask 后端应用
+│   ├── __init__.py          # 应用初始化
+│   ├── models/              # 数据模型
+│   │   ├── user.py          # 用户模型
+│   │   ├── book.py          # 图书模型
+│   │   └── borrow.py        # 借阅记录模型
+│   └── routes/              # API 路由
+│       ├── auth.py          # 认证接口
+│       ├── book.py          # 图书接口
+│       ├── borrow.py        # 借阅接口
+│       └── user.py          # 用户接口
+└── bms/                      # Next.js 前端应用
+    ├── app/                 # 页面路由
+    │   ├── login/           # 登录页
+    │   ├── register/        # 注册页
+    │   └── dashboard/       # 仪表板
+    │       ├── books/       # 图书管理
+    │       ├── borrows/     # 借阅管理
+    │       ├── users/       # 用户管理
+    │       ├── overdue/     # 逾期记录
+    │       └── profile/     # 个人中心
+    ├── components/          # React 组件
+    │   ├── ui/              # shadcn/ui 组件
+    │   ├── dashboard-header.tsx
+    │   └── dashboard-sidebar.tsx
+    └── lib/                 # 工具库
+        ├── api.ts           # API 客户端
+        ├── auth-context.tsx # 认证上下文
+        └── types.ts         # 类型定义
+```
 
-#### 3.1.1 用户表 (users)
+## 数据库设计
+
+### 用户表 (users)
 
 | 字段名 | 类型 | 说明 |
 |-------|------|------|
@@ -67,7 +124,7 @@
 | role | VARCHAR(10) | 角色：admin/user |
 | created_at | DATETIME | 创建时间 |
 
-#### 3.1.2 图书表 (books)
+### 图书表 (books)
 
 | 字段名 | 类型 | 说明 |
 |-------|------|------|
@@ -80,7 +137,7 @@
 | created_at | DATETIME | 创建时间 |
 | updated_at | DATETIME | 更新时间 |
 
-#### 3.1.3 借阅记录表 (borrow_records)
+### 借阅记录表 (borrow_records)
 
 | 字段名 | 类型 | 说明 |
 |-------|------|------|
@@ -89,35 +146,21 @@
 | book_id | INTEGER | 外键，关联图书表 |
 | borrow_date | DATETIME | 借阅时间 |
 | due_date | DATETIME | 应还时间 |
-| return_date | DATETIME | 实际归还时间（NULL表示未还） |
+| return_date | DATETIME | 实际归还时间 |
 | status | VARCHAR(10) | 状态：borrowed/returned |
 
-### 3.2 ER图
+## API 接口
 
-```
-+----------+       +----------------+       +-------+
-|  users   |       | borrow_records |       | books |
-+----------+       +----------------+       +-------+
-| id (PK)  |<----->| user_id (FK)   |       | id(PK)|
-| username |       | book_id (FK)   |<----->| title |
-| password |       | borrow_date    |       | author|
-| name     |       | due_date       |       | isbn  |
-| phone    |       | return_date    |       |quantity|
-| role     |       | status         |       |available|
-+----------+       +----------------+       +-------+
-```
-
-## 四、API接口设计
-
-### 4.1 用户认证接口
+### 认证接口
 
 | 方法 | 路径 | 说明 |
 |-----|------|------|
 | POST | /api/auth/login | 用户登录 |
 | POST | /api/auth/logout | 用户登出 |
 | POST | /api/auth/register | 用户注册 |
+| GET | /api/auth/me | 获取当前用户信息 |
 
-### 4.2 图书管理接口
+### 图书接口
 
 | 方法 | 路径 | 说明 | 权限 |
 |-----|------|------|------|
@@ -126,18 +169,17 @@
 | POST | /api/books | 新增图书 | 管理员 |
 | PUT | /api/books/{id} | 修改图书 | 管理员 |
 | DELETE | /api/books/{id} | 删除图书 | 管理员 |
-| GET | /api/books/search | 搜索图书 | 所有用户 |
 
-### 4.3 借阅管理接口
+### 借阅接口
 
 | 方法 | 路径 | 说明 | 权限 |
 |-----|------|------|------|
 | GET | /api/borrows | 获取借阅记录 | 管理员/本人 |
 | POST | /api/borrows | 办理借阅 | 管理员 |
 | PUT | /api/borrows/{id}/return | 办理归还 | 管理员 |
-| GET | /api/borrows/user/{user_id} | 查询用户借阅记录 | 管理员/本人 |
+| GET | /api/borrows/overdue | 获取逾期记录 | 管理员 |
 
-### 4.4 用户管理接口
+### 用户接口
 
 | 方法 | 路径 | 说明 | 权限 |
 |-----|------|------|------|
@@ -147,95 +189,15 @@
 | PUT | /api/users/{id} | 修改用户 | 管理员 |
 | DELETE | /api/users/{id} | 删除用户 | 管理员 |
 
-## 五、项目结构
+## 快速开始
 
-```
-图书管理系统/
-├── README.md                 # 项目说明文档
-├── requirements.txt          # Python依赖
-├── config.py                 # 配置文件
-├── run.py                    # 启动文件
-├── app/
-│   ├── __init__.py          # Flask应用初始化
-│   ├── models/              # 数据模型
-│   │   ├── __init__.py
-│   │   ├── user.py          # 用户模型
-│   │   ├── book.py          # 图书模型
-│   │   └── borrow.py        # 借阅记录模型
-│   ├── routes/              # 路由/视图
-│   │   ├── __init__.py
-│   │   ├── auth.py          # 认证路由
-│   │   ├── book.py          # 图书路由
-│   │   ├── borrow.py        # 借阅路由
-│   │   └── user.py          # 用户路由
-│   ├── services/            # 业务逻辑层
-│   │   ├── __init__.py
-│   │   ├── book_service.py
-│   │   ├── borrow_service.py
-│   │   └── user_service.py
-│   ├── static/              # 静态文件
-│   │   ├── css/
-│   │   └── js/
-│   └── templates/           # HTML模板
-│       ├── base.html        # 基础模板
-│       ├── index.html       # 首页
-│       ├── login.html       # 登录页
-│       ├── books/           # 图书相关页面
-│       ├── borrows/         # 借阅相关页面
-│       └── users/           # 用户相关页面
-└── tests/                   # 测试文件
-    ├── __init__.py
-    ├── test_book.py
-    ├── test_borrow.py
-    └── test_user.py
-```
-
-## 六、页面设计
-
-### 6.1 页面列表
-
-| 页面 | 路径 | 说明 | 访问权限 |
-|-----|------|------|---------|
-| 登录页 | /login | 用户登录 | 公开 |
-| 注册页 | /register | 用户注册 | 公开 |
-| 首页/仪表盘 | / | 系统概览 | 登录用户 |
-| 图书列表 | /books | 查看所有图书 | 登录用户 |
-| 图书详情 | /books/{id} | 查看图书详情 | 登录用户 |
-| 新增图书 | /books/add | 添加新图书 | 管理员 |
-| 编辑图书 | /books/{id}/edit | 编辑图书信息 | 管理员 |
-| 借阅记录 | /borrows | 查看借阅记录 | 登录用户 |
-| 办理借阅 | /borrows/add | 新增借阅 | 管理员 |
-| 用户列表 | /users | 查看所有用户 | 管理员 |
-| 用户详情 | /users/{id} | 查看用户详情 | 管理员/本人 |
-
-### 6.2 页面原型
-
-#### 登录页
-- 用户名输入框
-- 密码输入框
-- 登录按钮
-- 注册链接
-
-#### 首页/仪表盘
-- 图书总数统计
-- 借阅中数量统计
-- 用户数量统计（管理员可见）
-- 最近借阅记录
-
-#### 图书列表页
-- 搜索框（按书名/作者/ISBN）
-- 图书表格（书名、作者、ISBN、库存、操作）
-- 新增按钮（管理员可见）
-- 分页组件
-
-## 七、安装与运行
-
-### 7.1 环境要求
+### 环境要求
 
 - Python 3.8+
-- pip
+- Node.js 18+
+- npm 或 yarn
 
-### 7.2 安装步骤
+### 后端启动
 
 ```bash
 # 1. 进入项目目录
@@ -253,57 +215,80 @@ source venv/bin/activate
 # 4. 安装依赖
 pip install -r requirements.txt
 
-# 5. 运行项目（首次运行会自动创建数据库和管理员账户）
+# 5. 启动后端服务
 python run.py
 ```
 
-### 7.3 API 文档访问
+后端服务将在 http://localhost:5000 启动。
 
-启动服务后，可通过以下链接访问 API 文档：
+### 前端启动
+
+```bash
+# 1. 进入前端目录
+cd bms
+
+# 2. 安装依赖
+npm install
+
+# 3. 启动开发服务器
+npm run dev
+```
+
+前端应用将在 http://localhost:3000 启动。
+
+### API 文档
+
+启动后端服务后，可通过以下链接访问 API 文档：
 
 | 格式 | 链接 |
 |-----|------|
-| Swagger UI 界面 | http://localhost:5000/api/docs |
+| Swagger UI | http://localhost:5000/api/docs |
 | OpenAPI YAML | http://localhost:5000/api/openapi.yaml |
 | OpenAPI JSON | http://localhost:5000/api/openapi.json |
 
-### 7.4 默认账户
+## 默认账户
 
 | 角色 | 用户名 | 密码 |
 |-----|-------|------|
 | 管理员 | admin | admin123 |
-| 普通用户 | user | user123 |
 
-## 八、开发计划
+## 开发说明
 
-### 第一阶段：基础框架搭建
-- [x] 项目结构设计
-- [ ] 数据库模型实现
-- [ ] Flask应用初始化
+### 前端 API 代理
 
-### 第二阶段：核心功能实现
-- [ ] 用户认证（登录/注册/登出）
-- [ ] 图书管理（CRUD）
-- [ ] 借阅管理（借阅/归还）
+前端通过 Next.js 的 rewrites 功能将 `/api/*` 请求代理到后端服务器。如需修改后端地址，请编辑 `bms/next.config.ts`：
 
-### 第三阶段：前端页面
-- [ ] 登录/注册页面
-- [ ] 图书管理页面
-- [ ] 借阅管理页面
-- [ ] 用户管理页面
+```typescript
+async rewrites() {
+  return [
+    {
+      source: '/api/:path*',
+      destination: 'http://localhost:5000/api/:path*',
+    },
+  ];
+},
+```
 
-### 第四阶段：测试与优化
-- [ ] 单元测试
-- [ ] 功能测试
-- [ ] 性能优化
+### 构建生产版本
 
-## 九、注意事项
+```bash
+# 前端构建
+cd bms
+npm run build
+npm start
+
+# 后端生产部署建议使用 gunicorn
+pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app()"
+```
+
+## 注意事项
 
 1. **安全性**：密码使用哈希存储，敏感操作需要权限验证
 2. **数据完整性**：借阅时检查库存，归还时更新库存
 3. **用户体验**：提供友好的错误提示和操作反馈
-4. **可扩展性**：采用分层架构，便于后续功能扩展
+4. **可扩展性**：采用前后端分离架构，便于独立扩展
 
-## 十、许可证
+## 许可证
 
 MIT License
