@@ -1,0 +1,1382 @@
+
+openapi: 3.0.3
+info:
+  title: 图书管理系统 API
+  description: 基于Flask的图书管理系统RESTful API接口文档
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: http://localhost:5000
+    description: 开发服务器
+
+tags:
+  - name: 认证
+    description: 用户认证相关接口
+  - name: 图书
+    description: 图书管理相关接口
+  - name: 借阅
+    description: 借阅管理相关接口
+  - name: 用户
+    description: 用户管理相关接口
+
+paths:
+  # ==================== 认证接口 ====================
+  /api/auth/login:
+    post:
+      tags:
+        - 认证
+      summary: 用户登录
+      description: 使用用户名和密码进行登录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: 用户名
+                  example: admin
+                password:
+                  type: string
+                  description: 密码
+                  example: admin123
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 登录成功
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 用户名或密码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/logout:
+    post:
+      tags:
+        - 认证
+      summary: 用户登出
+      description: 退出当前登录状态
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 已退出登录
+
+  /api/auth/register:
+    post:
+      tags:
+        - 认证
+      summary: 用户注册
+      description: 注册新用户账户
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+                - name
+              properties:
+                username:
+                  type: string
+                  description: 用户名
+                  example: newuser
+                password:
+                  type: string
+                  description: 密码
+                  example: password123
+                name:
+                  type: string
+                  description: 真实姓名
+                  example: 张三
+                phone:
+                  type: string
+                  description: 手机号/学号
+                  example: "13800138000"
+      responses:
+        '201':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 注册成功
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: 请求参数错误或用户名已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/me:
+    get:
+      tags:
+        - 认证
+      summary: 获取当前用户信息
+      description: 获取当前登录用户的详细信息
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: 成功获取用户信息
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/User'
+
+  /api/auth/change-password:
+    post:
+      tags:
+        - 认证
+      summary: 修改密码
+      description: 修改当前用户的密码
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - old_password
+                - new_password
+              properties:
+                old_password:
+                  type: string
+                  description: 旧密码
+                new_password:
+                  type: string
+                  description: 新密码
+      responses:
+        '200':
+          description: 密码修改成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 密码修改成功
+        '400':
+          description: 旧密码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==================== 图书接口 ====================
+  /api/books:
+    get:
+      tags:
+        - 图书
+      summary: 获取图书列表
+      description: 分页获取所有图书
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 成功获取图书列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  books:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Book'
+                  total:
+                    type: integer
+                    description: 总数量
+                  pages:
+                    type: integer
+                    description: 总页数
+                  current_page:
+                    type: integer
+                    description: 当前页码
+
+    post:
+      tags:
+        - 图书
+      summary: 新增图书
+      description: 添加新图书（仅管理员）
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - author
+                - isbn
+              properties:
+                title:
+                  type: string
+                  description: 书名
+                  example: Python编程从入门到实践
+                author:
+                  type: string
+                  description: 作者
+                  example: Eric Matthes
+                isbn:
+                  type: string
+                  description: ISBN号
+                  example: "9787115428028"
+                quantity:
+                  type: integer
+                  description: 数量
+                  default: 1
+                  example: 5
+      responses:
+        '201':
+          description: 图书添加成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 图书添加成功
+                  book:
+                    $ref: '#/components/schemas/Book'
+        '400':
+          description: 请求参数错误或ISBN已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/books/{book_id}:
+    get:
+      tags:
+        - 图书
+      summary: 获取图书详情
+      description: 根据ID获取图书详细信息
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: book_id
+          in: path
+          required: true
+          description: 图书ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功获取图书详情
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  book:
+                    $ref: '#/components/schemas/Book'
+        '404':
+          description: 图书不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - 图书
+      summary: 修改图书
+      description: 更新图书信息（仅管理员）
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: book_id
+          in: path
+          required: true
+          description: 图书ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 书名
+                author:
+                  type: string
+                  description: 作者
+                isbn:
+                  type: string
+                  description: ISBN号
+                quantity:
+                  type: integer
+                  description: 数量
+      responses:
+        '200':
+          description: 图书更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 图书更新成功
+                  book:
+                    $ref: '#/components/schemas/Book'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 图书不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - 图书
+      summary: 删除图书
+      description: 删除图书（仅管理员，且图书无未归还借阅）
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: book_id
+          in: path
+          required: true
+          description: 图书ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 图书删除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 图书删除成功
+        '400':
+          description: 图书有未归还借阅，无法删除
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 图书不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/books/search:
+    get:
+      tags:
+        - 图书
+      summary: 搜索图书
+      description: 按关键词搜索图书
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: keyword
+          in: query
+          description: 搜索关键词
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: 搜索类型
+          schema:
+            type: string
+            enum: [all, title, author, isbn]
+            default: all
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 搜索成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  books:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Book'
+                  total:
+                    type: integer
+                  pages:
+                    type: integer
+                  current_page:
+                    type: integer
+
+  # ==================== 借阅接口 ====================
+  /api/borrows:
+    get:
+      tags:
+        - 借阅
+      summary: 获取借阅记录列表
+      description: 分页获取借阅记录（管理员可查看所有，普通用户只能查看自己的）
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          description: 借阅状态筛选
+          schema:
+            type: string
+            enum: [borrowed, returned, ""]
+      responses:
+        '200':
+          description: 成功获取借阅记录
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  records:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BorrowRecord'
+                  total:
+                    type: integer
+                  pages:
+                    type: integer
+                  current_page:
+                    type: integer
+
+    post:
+      tags:
+        - 借阅
+      summary: 办理借阅
+      description: 为用户办理图书借阅（仅管理员）
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - book_id
+              properties:
+                user_id:
+                  type: integer
+                  description: 用户ID
+                  example: 1
+                book_id:
+                  type: integer
+                  description: 图书ID
+                  example: 1
+                days:
+                  type: integer
+                  description: 借阅天数
+                  default: 30
+                  example: 30
+      responses:
+        '201':
+          description: 借阅成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 借阅成功
+                  record:
+                    $ref: '#/components/schemas/BorrowRecord'
+        '400':
+          description: 请求参数错误或图书无库存
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 用户或图书不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/borrows/{record_id}:
+    get:
+      tags:
+        - 借阅
+      summary: 获取借阅记录详情
+      description: 根据ID获取借阅记录详情
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: record_id
+          in: path
+          required: true
+          description: 借阅记录ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功获取借阅记录
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  record:
+                    $ref: '#/components/schemas/BorrowRecord'
+        '403':
+          description: 无权查看此记录
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 记录不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/borrows/{record_id}/return:
+    put:
+      tags:
+        - 借阅
+      summary: 办理归还
+      description: 办理图书归还（仅管理员）
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: record_id
+          in: path
+          required: true
+          description: 借阅记录ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 归还成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 归还成功
+                  record:
+                    $ref: '#/components/schemas/BorrowRecord'
+        '400':
+          description: 图书已归还
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 记录不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/borrows/user/{user_id}:
+    get:
+      tags:
+        - 借阅
+      summary: 查询用户借阅记录
+      description: 获取指定用户的借阅记录
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: 用户ID
+          schema:
+            type: integer
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          description: 借阅状态筛选
+          schema:
+            type: string
+            enum: [borrowed, returned, ""]
+      responses:
+        '200':
+          description: 成功获取借阅记录
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  records:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BorrowRecord'
+                  total:
+                    type: integer
+                  pages:
+                    type: integer
+                  current_page:
+                    type: integer
+        '403':
+          description: 无权查看此用户的借阅记录
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/borrows/book/{book_id}:
+    get:
+      tags:
+        - 借阅
+      summary: 查询图书借阅记录
+      description: 获取指定图书的借阅记录（仅管理员）
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: book_id
+          in: path
+          required: true
+          description: 图书ID
+          schema:
+            type: integer
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          description: 借阅状态筛选
+          schema:
+            type: string
+            enum: [borrowed, returned, ""]
+      responses:
+        '200':
+          description: 成功获取借阅记录
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  records:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BorrowRecord'
+                  total:
+                    type: integer
+                  pages:
+                    type: integer
+                  current_page:
+                    type: integer
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/borrows/overdue:
+    get:
+      tags:
+        - 借阅
+      summary: 获取逾期借阅记录
+      description: 获取所有逾期未还的借阅记录（仅管理员）
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 成功获取逾期记录
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  records:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BorrowRecord'
+                  total:
+                    type: integer
+                  pages:
+                    type: integer
+                  current_page:
+                    type: integer
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==================== 用户接口 ====================
+  /api/users:
+    get:
+      tags:
+        - 用户
+      summary: 获取用户列表
+      description: 分页获取所有用户（仅管理员）
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 成功获取用户列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  total:
+                    type: integer
+                  pages:
+                    type: integer
+                  current_page:
+                    type: integer
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - 用户
+      summary: 新增用户
+      description: 创建新用户（仅管理员）
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+                - name
+              properties:
+                username:
+                  type: string
+                  description: 用户名
+                  example: newuser
+                password:
+                  type: string
+                  description: 密码
+                  example: password123
+                name:
+                  type: string
+                  description: 真实姓名
+                  example: 李四
+                phone:
+                  type: string
+                  description: 手机号/学号
+                  example: "13900139000"
+                role:
+                  type: string
+                  description: 角色
+                  enum: [admin, user]
+                  default: user
+      responses:
+        '201':
+          description: 用户创建成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 用户创建成功
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: 请求参数错误或用户名已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users/{user_id}:
+    get:
+      tags:
+        - 用户
+      summary: 获取用户详情
+      description: 根据ID获取用户详情（管理员可查看所有，普通用户只能查看自己）
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: 用户ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功获取用户详情
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/User'
+        '403':
+          description: 无权查看此用户信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 用户不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - 用户
+      summary: 修改用户
+      description: 更新用户信息（管理员可修改所有，普通用户只能修改自己的部分信息）
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: 用户ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: 用户名（仅管理员可修改）
+                name:
+                  type: string
+                  description: 真实姓名
+                phone:
+                  type: string
+                  description: 手机号/学号
+                role:
+                  type: string
+                  description: 角色（仅管理员可修改）
+                  enum: [admin, user]
+                password:
+                  type: string
+                  description: 新密码（仅管理员可修改）
+      responses:
+        '200':
+          description: 用户更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 用户更新成功
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 无权修改此用户信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 用户不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - 用户
+      summary: 删除用户
+      description: 删除用户（仅管理员，且用户无未归还借阅）
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: 用户ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 用户删除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 用户删除成功
+        '400':
+          description: 用户有未归还借阅或不能删除自己
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 用户不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users/search:
+    get:
+      tags:
+        - 用户
+      summary: 搜索用户
+      description: 按关键词搜索用户（仅管理员）
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: keyword
+          in: query
+          description: 搜索关键词（用户名/姓名/手机号）
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 搜索成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  total:
+                    type: integer
+                  pages:
+                    type: integer
+                  current_page:
+                    type: integer
+        '403':
+          description: 需要管理员权限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 用户ID
+          example: 1
+        username:
+          type: string
+          description: 用户名
+          example: admin
+        name:
+          type: string
+          description: 真实姓名
+          example: 管理员
+        phone:
+          type: string
+          description: 手机号/学号
+          example: "10000000000"
+        role:
+          type: string
+          description: 角色
+          enum: [admin, user]
+          example: admin
+        created_at:
+          type: string
+          format: date-time
+          description: 创建时间
+          example: "2024-01-01T00:00:00"
+
+    Book:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 图书ID
+          example: 1
+        title:
+          type: string
+          description: 书名
+          example: Python编程从入门到实践
+        author:
+          type: string
+          description: 作者
+          example: Eric Matthes
+        isbn:
+          type: string
+          description: ISBN号
+          example: "9787115428028"
+        quantity:
+          type: integer
+          description: 总数量
+          example: 5
+        available:
+          type: integer
+          description: 可借数量
+          example: 3
+        is_available:
+          type: boolean
+          description: 是否可借
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          description: 创建时间
+        updated_at:
+          type: string
+          format: date-time
+          description: 更新时间
+
+    BorrowRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 借阅记录ID
+          example: 1
+        user_id:
+          type: integer
+          description: 用户ID
+          example: 1
+        book_id:
+          type: integer
+          description: 图书ID
+          example: 1
+        user:
+          $ref: '#/components/schemas/User'
+        book:
+          $ref: '#/components/schemas/Book'
+        borrow_date:
+          type: string
+          format: date-time
+          description: 借阅时间
+          example: "2024-01-01T10:00:00"
+        due_date:
+          type: string
+          format: date-time
+          description: 应还时间
+          example: "2024-01-31T10:00:00"
+        return_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: 实际归还时间
+          example: null
+        status:
+          type: string
+          description: 借阅状态
+          enum: [borrowed, returned]
+          example: borrowed
+        is_overdue:
+          type: boolean
+          description: 是否逾期
+          example: false
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          description: 错误信息
+          example: 请求参数错误
